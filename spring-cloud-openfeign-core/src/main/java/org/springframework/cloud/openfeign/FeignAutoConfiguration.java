@@ -93,6 +93,10 @@ public class FeignAutoConfiguration {
 		return HasFeatures.namedFeature("Feign", Feign.class);
 	}
 
+	/**
+	 * FeignContext通过spi机制，会加载spring.factories文件 会创建FeignAutoConfiguration
+	 * @return
+	 */
 	@Bean
 	public FeignContext feignContext() {
 		FeignContext context = new FeignContext();
