@@ -63,6 +63,7 @@ import org.springframework.format.support.FormattingConversionService;
 import static feign.form.ContentType.MULTIPART;
 
 /**
+ * FeignClientsConfiguration 默认情况下就是 Feign.Builder，如果启用了 feign.hystrix.enabled，那默认实现就是 HystrixFeign.Builder
  * @author Dave Syer
  * @author Venil Noronha
  * @author Darren Foong
@@ -191,6 +192,15 @@ public class FeignClientsConfiguration {
 		}
 	}
 
+	/**
+	 * 那 Feign.Builder 和 HystrixFeign.Build 有什么区别呢？对比下不难发现，
+	 * 主要区别就是创建动态代理的实现类 InvocationHandler 是不同的，
+	 * 在启用 hystrix 的情况下，会涉及到熔断、降级等，
+	 * HystrixFeign.Build 也会设置 @FeignClient 配置的 fallback、fallbackFactory 降级配置类。
+	 * 这块等后面分析 hystrix 源码时再来看。
+	 * 现在只需要知道，feign 没有启用 hystrix，@FeignClient 配置的 fallback、fallbackFactory 降级回调是不生效的。
+	 *
+	 */
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass({ HystrixCommand.class, HystrixFeign.class })
 	protected static class HystrixFeignConfiguration {

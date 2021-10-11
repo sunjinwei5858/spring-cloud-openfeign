@@ -125,7 +125,7 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 				.decoder(get(context, Decoder.class))
 				.contract(get(context, Contract.class));
 		// @formatter:on
-
+		// 读取配置文件中 feign.client.* 的配置来配置 Feign
 		configureFeign(context, builder);
 		applyBuildCustomizers(context, builder);
 
@@ -145,6 +145,11 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 		additionalCustomizers.forEach(customizer -> customizer.customize(builder));
 	}
 
+	/**
+	 *     // 读取配置文件中 feign.client.* 的配置来配置 Feign
+	 * @param context
+	 * @param builder
+	 */
 	protected void configureFeign(FeignContext context, Feign.Builder builder) {
 		FeignClientProperties properties = beanFactory != null
 				? beanFactory.getBean(FeignClientProperties.class)
@@ -344,8 +349,7 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 		}
 	}
 
-	protected <T> T loadBalance(Feign.Builder builder, FeignContext context,
-			HardCodedTarget<T> target) {
+	protected <T> T loadBalance(Feign.Builder builder, FeignContext context, HardCodedTarget<T> target) {
 		Client client = getOptional(context, Client.class);
 		if (client != null) {
 			builder.client(client);
@@ -357,6 +361,10 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 				"No Feign Client for loadBalancing defined. Did you forget to include spring-cloud-starter-netflix-ribbon or spring-cloud-starter-loadbalancer?");
 	}
 
+	/**
+	 * FeignClientFactoryBean 实现了 getObject() 方法，它又调用了 getTarget() 方法，getTarget() 最后就创建了 FeignClient 接口的动态代理对象。
+	 * @return
+	 */
 	@Override
 	public Object getObject() {
 		return getTarget();
@@ -368,11 +376,12 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 	 * information
 	 */
 	<T> T getTarget() {
-		FeignContext context = beanFactory != null
-				? beanFactory.getBean(FeignContext.class)
-				: applicationContext.getBean(FeignContext.class);
+		// 1 feign上下文 首先获取feign的上下文：每个服务都有自己的配置 encoder decoder组件等 所以可以从FeignContext中获取到当前服务的组件
+		FeignContext context = beanFactory != null ? beanFactory.getBean(FeignContext.class) : applicationContext.getBean(FeignContext.class);
+		// 2 feign构造器 然后从 FeignContext 中得到了 Feign.Builder，这个 Feign.Builder 就是最终用来创建动态代理对象的构造器。
 		Feign.Builder builder = feign(context);
 
+		// 3 如果没有配置url 就会走负载均衡请求
 		if (!StringUtils.hasText(url)) {
 
 			if (LOG.isInfoEnabled()) {
@@ -385,24 +394,28 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 			else {
 				url = name;
 			}
+			// 带服务名的地址 => http://demo-consumer
 			url += cleanPath();
-			return (T) loadBalance(builder, context,
-					new HardCodedTarget<>(type, name, url));
+			// 返回的类型肯定是具备负载均衡能力的；HardCodedTarget => 硬编码的 Target
+			return (T) loadBalance(builder, context, new HardCodedTarget<>(type, name, url));
 		}
 		if (StringUtils.hasText(url) && !url.startsWith("http")) {
 			url = "http://" + url;
 		}
 		String url = this.url + cleanPath();
+		// Client => Feign 发起 HTTP 调用的核心组件
 		Client client = getOptional(context, Client.class);
 		if (client != null) {
 			if (client instanceof LoadBalancerFeignClient) {
 				// not load balancing because we have a url,
 				// but ribbon is on the classpath, so unwrap
+				// 得到的是代理对象，就是原生的 Client.Default
 				client = ((LoadBalancerFeignClient) client).getDelegate();
 			}
 			if (client instanceof FeignBlockingLoadBalancerClient) {
 				// not load balancing because we have a url,
 				// but Spring Cloud LoadBalancer is on the classpath, so unwrap
+				// 得到的是代理对象，就是原生的 Client.Default
 				client = ((FeignBlockingLoadBalancerClient) client).getDelegate();
 			}
 			if (client instanceof RetryableFeignBlockingLoadBalancerClient) {
@@ -414,8 +427,8 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 			builder.client(client);
 		}
 		Targeter targeter = get(context, Targeter.class);
-		return (T) targeter.target(this, builder, context,
-				new HardCodedTarget<>(type, name, url));
+		// targeter 创建动态代理对象
+		return (T) targeter.target(this, builder, context, new HardCodedTarget<>(type, name, url));
 	}
 
 	private String cleanPath() {
