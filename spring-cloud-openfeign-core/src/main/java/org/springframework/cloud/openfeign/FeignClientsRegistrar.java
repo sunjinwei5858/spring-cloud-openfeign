@@ -143,17 +143,23 @@ class FeignClientsRegistrar
 		this.resourceLoader = resourceLoader;
 	}
 
+	/**
+	 * @EnableFeignClient 动态注册组件 https://juejin.cn/post/6938224934539919374
+	 *
+	 * FeignClientsRegistrar 实现的 registerBeanDefinitions 方法中，主要有两步：
+	 * @param metadata
+	 * @param registry
+	 */
 	@Override
-	public void registerBeanDefinitions(AnnotationMetadata metadata,
-			BeanDefinitionRegistry registry) {
+	public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
+		// 注册FeignClient默认配置对象，就是根据 @EnableFeignClients 的 defaultConfiguration 配置类注入默认配置，这个一般就是全局配置。
 		registerDefaultConfiguration(metadata, registry);
+		// 之后就是扫描 @FeignClient 注解的接口，封装成 BeanDefinition，然后用 BeanDefinitionRegistry 来注册。
 		registerFeignClients(metadata, registry);
 	}
 
-	private void registerDefaultConfiguration(AnnotationMetadata metadata,
-			BeanDefinitionRegistry registry) {
-		Map<String, Object> defaultAttrs = metadata
-				.getAnnotationAttributes(EnableFeignClients.class.getName(), true);
+	private void registerDefaultConfiguration(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
+		Map<String, Object> defaultAttrs = metadata.getAnnotationAttributes(EnableFeignClients.class.getName(), true);
 
 		if (defaultAttrs != null && defaultAttrs.containsKey("defaultConfiguration")) {
 			String name;
@@ -163,8 +169,7 @@ class FeignClientsRegistrar
 			else {
 				name = "default." + metadata.getClassName();
 			}
-			registerClientConfiguration(registry, name,
-					defaultAttrs.get("defaultConfiguration"));
+			registerClientConfiguration(registry, name, defaultAttrs.get("defaultConfiguration"));
 		}
 	}
 
@@ -172,10 +177,8 @@ class FeignClientsRegistrar
 			BeanDefinitionRegistry registry) {
 
 		LinkedHashSet<BeanDefinition> candidateComponents = new LinkedHashSet<>();
-		Map<String, Object> attrs = metadata
-				.getAnnotationAttributes(EnableFeignClients.class.getName());
-		final Class<?>[] clients = attrs == null ? null
-				: (Class<?>[]) attrs.get("clients");
+		Map<String, Object> attrs = metadata.getAnnotationAttributes(EnableFeignClients.class.getName());
+		final Class<?>[] clients = attrs == null ? null : (Class<?>[]) attrs.get("clients");
 		if (clients == null || clients.length == 0) {
 			ClassPathScanningCandidateComponentProvider scanner = getScanner();
 			scanner.setResourceLoader(this.resourceLoader);
@@ -205,12 +208,18 @@ class FeignClientsRegistrar
 				String name = getClientName(attributes);
 				registerClientConfiguration(registry, name,
 						attributes.get("configuration"));
-
+				// 真正注册bean定义的过程
 				registerFeignClient(registry, annotationMetadata, attributes);
 			}
 		}
 	}
 
+	/**
+	 * !!!! 非常重要 FactoryBean的第二处应用FeignClientFactoryBean，第一处是mybatis整合spring
+	 * @param registry
+	 * @param annotationMetadata
+	 * @param attributes
+	 */
 	private void registerFeignClient(BeanDefinitionRegistry registry,
 			AnnotationMetadata annotationMetadata, Map<String, Object> attributes) {
 		String className = annotationMetadata.getClassName();
@@ -219,6 +228,7 @@ class FeignClientsRegistrar
 				? (ConfigurableBeanFactory) registry : null;
 		String contextId = getContextId(beanFactory, attributes);
 		String name = getName(attributes);
+		// FeignClientFactoryBean 就是生成 FeignClient 接口动态代理的核心组件。
 		FeignClientFactoryBean factoryBean = new FeignClientFactoryBean();
 		factoryBean.setBeanFactory(beanFactory);
 		factoryBean.setName(name);
@@ -262,7 +272,7 @@ class FeignClientsRegistrar
 		if (ObjectUtils.isEmpty(qualifiers)) {
 			qualifiers = new String[] { contextId + "FeignClient" };
 		}
-
+		// 将信息都封装到 BeanDefinitionHolder
 		BeanDefinitionHolder holder = new BeanDefinitionHolder(beanDefinition, className,
 				qualifiers);
 		BeanDefinitionReaderUtils.registerBeanDefinition(holder, registry);
