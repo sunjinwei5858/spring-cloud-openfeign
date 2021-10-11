@@ -146,7 +146,8 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 	}
 
 	/**
-	 *     // 读取配置文件中 feign.client.* 的配置来配置 Feign
+	 *  feign配置读取：这里有优先级
+	 *  从源码逻辑可以发现，默认情况下，优先级最低的是代码配置，其次是默认配置，优先级最高的是服务特定的配置
 	 * @param context
 	 * @param builder
 	 */
@@ -160,17 +161,17 @@ public class FeignClientFactoryBean implements FactoryBean<Object>, Initializing
 		setInheritParentContext(feignClientConfigurer.inheritParentConfiguration());
 
 		if (properties != null && inheritParentContext) {
+			// defaultToProperties：优先使用配置文件中的配置
 			if (properties.isDefaultToProperties()) {
+				// 最低优先级：使用代码中的 Configuration 配置
 				configureUsingConfiguration(context, builder);
-				configureUsingProperties(
-						properties.getConfig().get(properties.getDefaultConfig()),
-						builder);
+				// 次优先级：使用 feign.client.default 默认配置
+				configureUsingProperties(properties.getConfig().get(properties.getDefaultConfig()), builder);
+				// 高优先级：使用 feign.client.<clientName> 定义的配置
 				configureUsingProperties(properties.getConfig().get(contextId), builder);
-			}
-			else {
-				configureUsingProperties(
-						properties.getConfig().get(properties.getDefaultConfig()),
-						builder);
+			} else {
+				// 优先使用Java代码的配置
+				configureUsingProperties(properties.getConfig().get(properties.getDefaultConfig()), builder);
 				configureUsingProperties(properties.getConfig().get(contextId), builder);
 				configureUsingConfiguration(context, builder);
 			}
