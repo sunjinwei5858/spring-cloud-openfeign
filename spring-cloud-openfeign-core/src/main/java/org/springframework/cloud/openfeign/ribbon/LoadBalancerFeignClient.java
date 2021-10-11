@@ -30,6 +30,9 @@ import feign.Response;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 
 /**
+ * 可以看出，三个配置类创建的 Client 对象都是 LoadBalancerFeignClient，也就是支持负载均衡的请求。
+ * 只是代理类不同，也就是最终发起 HTTP 调用的组件是不同的，默认配置下的代理类是 Client.Default，底层就是 HttpURLConnection。
+ *
  * @author Dave Syer
  * @author Olga Maciaszek-Sharma
  *

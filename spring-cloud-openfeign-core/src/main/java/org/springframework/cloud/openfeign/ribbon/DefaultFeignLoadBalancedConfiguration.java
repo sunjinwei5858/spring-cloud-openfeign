@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
+ * 默认的代理对象 Client.Default 其实就是使用 HttpURLConnection 发起 HTTP 调用。
  * @author Spencer Gibb
  */
 @Configuration(proxyBeanMethods = false)
