@@ -206,8 +206,7 @@ class FeignClientsRegistrar
 						.getAnnotationAttributes(FeignClient.class.getCanonicalName());
 
 				String name = getClientName(attributes);
-				registerClientConfiguration(registry, name,
-						attributes.get("configuration"));
+				registerClientConfiguration(registry, name, attributes.get("configuration"));
 				// 真正注册bean定义的过程
 				registerFeignClient(registry, annotationMetadata, attributes);
 			}
@@ -220,12 +219,10 @@ class FeignClientsRegistrar
 	 * @param annotationMetadata
 	 * @param attributes
 	 */
-	private void registerFeignClient(BeanDefinitionRegistry registry,
-			AnnotationMetadata annotationMetadata, Map<String, Object> attributes) {
+	private void registerFeignClient(BeanDefinitionRegistry registry, AnnotationMetadata annotationMetadata, Map<String, Object> attributes) {
 		String className = annotationMetadata.getClassName();
 		Class clazz = ClassUtils.resolveClassName(className, null);
-		ConfigurableBeanFactory beanFactory = registry instanceof ConfigurableBeanFactory
-				? (ConfigurableBeanFactory) registry : null;
+		ConfigurableBeanFactory beanFactory = registry instanceof ConfigurableBeanFactory ? (ConfigurableBeanFactory) registry : null;
 		String contextId = getContextId(beanFactory, attributes);
 		String name = getName(attributes);
 		// FeignClientFactoryBean 就是生成 FeignClient 接口动态代理的核心组件。
@@ -253,6 +250,7 @@ class FeignClientsRegistrar
 								: ClassUtils.resolveClassName(fallbackFactory.toString(),
 										null));
 					}
+					//
 					return factoryBean.getObject();
 				});
 		definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
@@ -273,8 +271,7 @@ class FeignClientsRegistrar
 			qualifiers = new String[] { contextId + "FeignClient" };
 		}
 		// 将信息都封装到 BeanDefinitionHolder
-		BeanDefinitionHolder holder = new BeanDefinitionHolder(beanDefinition, className,
-				qualifiers);
+		BeanDefinitionHolder holder = new BeanDefinitionHolder(beanDefinition, className, qualifiers);
 		BeanDefinitionReaderUtils.registerBeanDefinition(holder, registry);
 	}
 
