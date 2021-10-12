@@ -22,6 +22,7 @@ import feign.RequestTemplate;
 import org.springframework.util.Assert;
 
 /**
+ * feign的拦截器 可以用于扩展
  * The base request interceptor.
  *
  * @author Jakub Narloch

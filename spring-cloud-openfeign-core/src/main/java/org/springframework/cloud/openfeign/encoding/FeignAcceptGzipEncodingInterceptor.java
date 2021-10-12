@@ -19,6 +19,7 @@ package org.springframework.cloud.openfeign.encoding;
 import feign.RequestTemplate;
 
 /**
+ *
  * Enables the HTTP response payload compression by specifying the {@code Accept-Encoding}
  * headers. Although this does not yet mean that the requests will be compressed, it
  * requires the remote server to understand the header and be configured to compress

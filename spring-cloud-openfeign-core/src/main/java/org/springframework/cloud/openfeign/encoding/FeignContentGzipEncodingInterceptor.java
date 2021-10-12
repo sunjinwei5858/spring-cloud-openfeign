@@ -22,6 +22,7 @@ import java.util.Map;
 import feign.RequestTemplate;
 
 /**
+ *
  * Enables the HTTP request payload compression by specifying the {@code Content-Encoding}
  * headers.
  *
