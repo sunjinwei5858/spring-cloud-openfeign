@@ -73,12 +73,21 @@ public class LoadBalancerFeignClient implements Client {
 		return URI.create(buffer.toString());
 	}
 
+	/**
+	 * 会将普通的Request对象转化为RibbonRequest
+	 * @param request
+	 * @param options
+	 * @return
+	 * @throws IOException
+	 */
 	@Override
 	public Response execute(Request request, Request.Options options) throws IOException {
 		try {
 			URI asUri = URI.create(request.url());
 			String clientName = asUri.getHost();
 			URI uriWithoutHost = cleanUrl(request.url(), clientName);
+			// 1 构建RibbonRequest
+			// delegate一般就是真正发送网络请求的客户端 比如说okhttpclient apacheclient
 			FeignLoadBalancer.RibbonRequest ribbonRequest = new FeignLoadBalancer.RibbonRequest(
 					this.delegate, request, uriWithoutHost);
 
