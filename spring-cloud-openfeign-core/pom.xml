@@ -89,6 +89,7 @@
 			<artifactId>spring-cloud-context</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<!--feign 引入了ribbon的依赖-->
 		<dependency>
 			<groupId>com.netflix.ribbon</groupId>
 			<artifactId>ribbon-loadbalancer</artifactId>
@@ -128,6 +129,7 @@
 			<artifactId>feign-okhttp</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<!--feign 引入了hystrix的依赖-->
 		<dependency>
 			<groupId>com.netflix.hystrix</groupId>
 			<artifactId>hystrix-core</artifactId>
