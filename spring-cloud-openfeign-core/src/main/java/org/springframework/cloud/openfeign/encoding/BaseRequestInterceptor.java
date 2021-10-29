@@ -44,6 +44,8 @@ public abstract class BaseRequestInterceptor implements RequestInterceptor {
 	}
 
 	/**
+	 * 使用feign的拦截器 可以实现traceId传递，将traceId放入请求头
+	 *
 	 * Adds the header if it wasn't yet specified.
 	 * @param requestTemplate the request
 	 * @param name the header name
